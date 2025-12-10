@@ -473,177 +473,147 @@ class SaleController extends Controller
     /**
      * Store Records
      * */
-    public function store(SaleRequest $request): JsonResponse
-    {
-        try {
+   public function store(SaleRequest $request): JsonResponse
+{
+    try {
 
-            DB::beginTransaction();
-            // Get the validated data from the expenseRequest
-            $validatedData = $request->validated();
+        DB::beginTransaction();
 
-            if ($request->operation == 'save' || $request->operation == 'convert') {
-                // Create a new sale record using Eloquent and save it
-                $newSale = Sale::create($validatedData);
+        // Get validated input
+        $validatedData = $request->validated();
 
-                $request->request->add(['sale_id' => $newSale->id]);
-            } else {
-                $fillableColumns = [
-                    'party_id' => $validatedData['party_id'],
-                    'sale_date' => $validatedData['sale_date'],
-                    'reference_no' => $validatedData['reference_no'],
-                    'prefix_code' => $validatedData['prefix_code'],
-                    'count_id' => $validatedData['count_id'],
-                    'sale_code' => $validatedData['sale_code'],
-                    'note' => $validatedData['note'],
-                    'round_off' => $validatedData['round_off'],
-                    'grand_total' => $validatedData['grand_total'],
-                    'state_id' => $validatedData['state_id'],
-                    'currency_id' => $validatedData['currency_id'],
-                    'exchange_rate' => $validatedData['exchange_rate'],
-                ];
-
-                $newSale = Sale::findOrFail($validatedData['sale_id']);
-                $newSale->update($fillableColumns);
-
-                /**
-                 * Before deleting ItemTransaction data take the
-                 * old data of the item_serial_master_id
-                 * to update the item_serial_quantity
-                 * */
-                $this->previousHistoryOfItems = $this->itemTransactionService->getHistoryOfItems($newSale);
-
-                $newSale->itemTransaction()->delete();
-                // $newSale->accountTransaction()->delete();
-
-                // Sale Account Update
-                foreach ($newSale->accountTransaction as $saleAccount) {
-                    // get account if of model with tax accounts
-                    $saleAccountId = $saleAccount->account_id;
-
-                    // Delete sale and tax account
-                    $saleAccount->delete();
-
-                    // Update  account
-                    $this->accountTransactionService->calculateAccounts($saleAccountId);
-                }// sale account
-
-                // Check if paymentTransactions exist
-                // $paymentTransactions = $newSale->paymentTransaction;
-                // if ($paymentTransactions->isNotEmpty()) {
-                //     foreach ($paymentTransactions as $paymentTransaction) {
-                //         $accountTransactions = $paymentTransaction->accountTransaction;
-                //         if ($accountTransactions->isNotEmpty()) {
-                //             foreach ($accountTransactions as $accountTransaction) {
-                //                 //Sale Account Update
-                //                 $accountId = $accountTransaction->account_id;
-                //                 // Do something with the individual accountTransaction
-                //                 $accountTransaction->delete(); // Or any other operation
-
-                //                 $this->accountTransactionService->calculateAccounts($accountId);
-                //             }
-                //         }
-                //     }
-                // }
-
-                // $newSale->paymentTransaction()->delete();
-            }
-
-            $request->request->add(['modelName' => $newSale]);
-
-            /**
-             * Save Table Items in Sale Items Table
-             * */
-            $SaleItemsArray = $this->saveSaleItems($request);
-            if (! $SaleItemsArray['status']) {
-                throw new \Exception($SaleItemsArray['message']);
-            }
-
-            /**
-             * Save Expense Payment Records
-             * */
-            $salePaymentsArray = $this->saveSalePayments($request);
-            if (! $salePaymentsArray['status']) {
-                throw new \Exception($salePaymentsArray['message']);
-            }
-
-            /**
-             * Payment Should not be less than 0
-             * */
-            $paidAmount = $newSale->refresh('paymentTransaction')->paymentTransaction->sum('amount');
-            if ($paidAmount < 0) {
-                throw new \Exception(__('payment.paid_amount_should_not_be_less_than_zero'));
-            }
-
-            /**
-             * Paid amount should not be greater than grand total
-             * */
-            if ($paidAmount > $newSale->grand_total) {
-                throw new \Exception(__('payment.payment_should_not_be_greater_than_grand_total').'<br>Paid Amount : '.$this->formatWithPrecision($paidAmount).'<br>Grand Total : '.$this->formatWithPrecision($newSale->grand_total).'<br>Difference : '.$this->formatWithPrecision($paidAmount - $newSale->grand_total));
-            }
-
-            /**
-             * Update Sale Model
-             * Total Paid Amunt
-             * */
-            if (! $this->paymentTransactionService->updateTotalPaidAmountInModel($request->modelName)) {
-                throw new \Exception(__('payment.failed_to_update_paid_amount'));
-            }
-
-            /**
-             * Update Account Transaction entry
-             * Call Services
-             *
-             * @return bool
-             * */
-            // $accountTransactionStatus = $this->accountTransactionService->saleAccountTransaction($request->modelName);
-            // if(!$accountTransactionStatus){
-            //     throw new \Exception(__('payment.failed_to_update_account'));
-            // }
-
-            /**
-             * Credit Limit Check
-             * */
-            if ($this->partyService->limitThePartyCreditLimit($validatedData['party_id'])) {
-                //
-            }
-
-            /**
-             * UPDATE HISTORY DATA
-             * LIKE: ITEM SERIAL NUMBER QUNATITY, BATCH NUMBER QUANTITY, GENERAL DATA QUANTITY
-             * */
-            $this->itemTransactionService->updatePreviousHistoryOfItems($request->modelName, $this->previousHistoryOfItems);
-
-            /**
-             * Modules: call events
-             */
-            if (isPartnershipModuleActive()) {
-                \Modules\Partnership\Events\SaleCreated::dispatch($newSale);
-                \Modules\Partnership\Events\SalePaymentCreated::dispatch($newSale);
-            }
-
-            DB::commit();
-
-            // Regenerate the CSRF token
-            // Session::regenerateToken();
-
-            return response()->json([
-                'status' => true,
-                'message' => __('app.record_saved_successfully'),
-                'id' => $request->sale_id,
-
+        /**
+         * NEW: Block Overall Discount if user has no permission
+         */
+        if (!auth()->user()->can('add_overall_discount')) {
+            $request->merge([
+                'overall_discount' => 0,
+                'overall_discount_type' => 'fixed' // safe default
             ]);
-
-        } catch (\Exception $e) {
-            DB::rollback();
-
-            return response()->json([
-                'status' => false,
-                'message' => $e->getMessage(),
-            ], 409);
-
+            $validatedData['overall_discount'] = 0;
+            $validatedData['overall_discount_type'] = 'fixed';
         }
 
+        /**
+         * Create or Update Sale
+         */
+        if ($request->operation == 'save' || $request->operation == 'convert') {
+
+            // Create new sale
+            $newSale = Sale::create($validatedData);
+            $request->request->add(['sale_id' => $newSale->id]);
+
+        } else {
+
+            $fillableColumns = [
+                'party_id' => $validatedData['party_id'],
+                'sale_date' => $validatedData['sale_date'],
+                'reference_no' => $validatedData['reference_no'],
+                'prefix_code' => $validatedData['prefix_code'],
+                'count_id' => $validatedData['count_id'],
+                'sale_code' => $validatedData['sale_code'],
+                'note' => $validatedData['note'],
+                'round_off' => $validatedData['round_off'],
+                'grand_total' => $validatedData['grand_total'],
+                'state_id' => $validatedData['state_id'],
+                'currency_id' => $validatedData['currency_id'],
+                'exchange_rate' => $validatedData['exchange_rate'],
+
+                // NEW FIELDS
+                'overall_discount' => $validatedData['overall_discount'],
+                'overall_discount_type' => $validatedData['overall_discount_type'],
+            ];
+
+            $newSale = Sale::findOrFail($validatedData['sale_id']);
+            $newSale->update($fillableColumns);
+
+            // (old logic remains unchanged — item history, delete, recalc, etc...)
+            $this->previousHistoryOfItems = $this->itemTransactionService->getHistoryOfItems($newSale);
+            $newSale->itemTransaction()->delete();
+
+            foreach ($newSale->accountTransaction as $saleAccount) {
+                $saleAccountId = $saleAccount->account_id;
+                $saleAccount->delete();
+                $this->accountTransactionService->calculateAccounts($saleAccountId);
+            }
+        }
+
+        $request->request->add(['modelName' => $newSale]);
+
+        /**
+         * Save Sale Items
+         */
+        $SaleItemsArray = $this->saveSaleItems($request);
+        if (!$SaleItemsArray['status']) {
+            throw new \Exception($SaleItemsArray['message']);
+        }
+
+        /**
+         * Save Payments
+         */
+        $salePaymentsArray = $this->saveSalePayments($request);
+        if (!$salePaymentsArray['status']) {
+            throw new \Exception($salePaymentsArray['message']);
+        }
+
+        /**
+         * Validate payment limits
+         */
+        $paidAmount = $newSale->refresh('paymentTransaction')->paymentTransaction->sum('amount');
+        if ($paidAmount < 0) {
+            throw new \Exception(__('payment.paid_amount_should_not_be_less_than_zero'));
+        }
+        if ($paidAmount > $newSale->grand_total) {
+            throw new \Exception(
+                __('payment.payment_should_not_be_greater_than_grand_total') .
+                '<br>Paid Amount : '.$this->formatWithPrecision($paidAmount).
+                '<br>Grand Total : '.$this->formatWithPrecision($newSale->grand_total).
+                '<br>Difference : '.$this->formatWithPrecision($paidAmount - $newSale->grand_total)
+            );
+        }
+
+        // Update Paid Amount
+        if (!$this->paymentTransactionService->updateTotalPaidAmountInModel($request->modelName)) {
+            throw new \Exception(__('payment.failed_to_update_paid_amount'));
+        }
+
+        /**
+         * Credit Limit Check
+         */
+        $this->partyService->limitThePartyCreditLimit($validatedData['party_id']);
+
+        /**
+         * Restore History (serial/batch qty)
+         */
+        $this->itemTransactionService->updatePreviousHistoryOfItems($request->modelName, $this->previousHistoryOfItems);
+
+        /**
+         * Partnership Events
+         */
+        if (isPartnershipModuleActive()) {
+            \Modules\Partnership\Events\SaleCreated::dispatch($newSale);
+            \Modules\Partnership\Events\SalePaymentCreated::dispatch($newSale);
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'status' => true,
+            'message' => __('app.record_saved_successfully'),
+            'id' => $request->sale_id,
+        ]);
+
+    } catch (\Exception $e) {
+
+        DB::rollback();
+
+        return response()->json([
+            'status' => false,
+            'message' => $e->getMessage(),
+        ], 409);
     }
+}
+
 
     public function saveSalePayments($request)
     {
@@ -1370,5 +1340,10 @@ class SaleController extends Controller
             'results' => $results,
             'hasMore' => ($page * $perPage) < $total,
         ]);
+    }
+
+    private function calculateSubtotal(Sale $sale)
+    {
+        return $sale->itemTransaction->sum('total'); // Example: sum of item totals
     }
 }

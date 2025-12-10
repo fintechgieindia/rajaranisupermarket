@@ -147,7 +147,18 @@
 
                 <div class="col-8 text-end"><strong>{{ __('app.round_off') }}</strong></div>
                 <div class="col-4">{{ $formatNumber->formatWithPrecision($sale->round_off) }}</div>
+<!-- ... (existing table) -->
+  <div class="col-8 text-end"><strong>Overall Discount</strong></div>
+                <div class="col-4">{{ $formatNumber->formatWithPrecision($sale->overall_discount) }} 
+        @if($sale->overall_discount_type === 'percentage') % @endif</div>
+{{-- <tr>
+    <td>Overall Discount</td>
+    <td class="text-end">{{ $formatNumber->formatWithPrecision($sale->overall_discount) }} 
+        @if($sale->overall_discount_type === 'percentage') % @endif
+    </td>
+</tr> --}}
 
+<!-- ... (grand total after this) -->
                 <div class="col-8 text-end"><strong>{{ __('app.grand_total') }}</strong></div>
                 <div class="col-4">{{ $formatNumber->formatWithPrecision($sale->grand_total) }}</div>
 

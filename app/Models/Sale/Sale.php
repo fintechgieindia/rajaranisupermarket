@@ -44,6 +44,8 @@ class Sale extends Model
         'paid_amount',
         'currency_id',
         'exchange_rate',
+        'overall_discount', // NEW: Added
+        'overall_discount_type',
     ];
 
     /**

@@ -48,6 +48,8 @@ class SaleRequest extends FormRequest
             'currency_id' => ['nullable', 'integer', 'min:1'],
             'exchange_rate' => ['nullable', 'numeric', 'min:0'],
             'note'=> ['nullable', 'string', 'max:1000'],
+            'overall_discount' => ['nullable', 'numeric', 'min:0'],
+            'overall_discount_type' => ['nullable', 'string', 'in:fixed,percentage'],
 
         ];
 
@@ -91,6 +93,8 @@ class SaleRequest extends FormRequest
             'is_wholesale_customer' => Party::select('is_wholesale_customer')
                 ->find($this->input('party_id'))
                 ?->is_wholesale_customer ?? false,
+
+                'overall_discount_type' => $this->input('overall_discount_type', 'fixed'),
         ]);
 
         // check is invoice_currency_id is exist or not
@@ -126,6 +130,9 @@ class SaleRequest extends FormRequest
     {
         $responseMessages = [
             'row_count.min' => __('item.please_select_items'),
+            'overall_discount.numeric' => 'Overall discount must be a number.',
+            'overall_discount.min' => 'Overall discount cannot be negative.',
+            'overall_discount_type.in' => 'Overall discount type must be fixed or percentage.',
         ];
 
         if ($this->isMethod('PUT')) {

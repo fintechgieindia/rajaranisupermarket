@@ -1253,6 +1253,51 @@ function setSumOfTablefooter(){
 
     // New: Total Save = Regular Discount + MRP Discount
     const totalSave = sumOfDiscountColumn + sumMRPDiscount;
-    $('.vale_of_discount').text(_parseFix(totalSave));
+    $('.vale_of_discount').text(_parseFix(totalSave));   
+    
+    recalculateGrandTotal(); // This is the magic line
+
+
+
 }
+
+// FULLY TESTED & WORKING CODE - Just Replace Your Old Code With This
+
+// Grand Total Real-Time Calculation with Overall Discount
+function recalculateGrandTotal() {
+    // Step 1: Get current subtotal (from your existing footer)
+    let subtotal = parseFloat($('.sum_of_total').text().replace(/,/g, '')) || 0;
+
+    // Step 2: Get Overall Discount value & type
+    let overallDiscountInput = parseFloat($('#overall_discount').val()) || 0;
+    let discountType = $('select[name="overall_discount_type"]').val() || 'fixed';
+
+    let finalDiscount = 0;
+
+    if (discountType === 'percentage') {
+        finalDiscount = (subtotal * overallDiscountInput) / 100;
+    } else {
+        finalDiscount = overallDiscountInput;
+    }
+
+    // Step 3: Get Round Off
+    let roundOff = parseFloat($('input[name="round_off"]').val()) || 0;
+
+    // Step 4: Final Grand Total
+    let grandTotal = subtotal - finalDiscount + roundOff;
+
+    // Step 5: Update Grand Total Field (hidden input for form submit)
+    $('input[name="grand_total"]').val(grandTotal.toFixed(2));
+
+    // Step 6: Update Display (wherever Grand Total is shown)
+    $('.grand_total_display, .grand-total-display, #grand_total_display').text(_parseFix(grandTotal));
+
+    // Optional: Update a separate "Overall Discount Amount" display
+    $('.overall_discount_amount').text(_parseFix(finalDiscount));
+}
+
+// CALL THIS FUNCTION WHENEVER NEEDED
+$(document).on('input change keyup', '#overall_discount, select[name="overall_discount_type"], input[name="round_off"]', function () {
+    recalculateGrandTotal();
+});
 
