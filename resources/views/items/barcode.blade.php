@@ -33,14 +33,13 @@
                                                 </select>
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <x-label for="size" name="{{ __('item.size') }}" />
-                                                <select class="form-select" data-placeholder="Select Barcode Type" id="size" name="size">
-                                                    <option value="1_100x50">1 Labels (100 x 50mm)</option>
-                                                    <option value="1_50x25">1 Labels (50 x 25mm)</option>
-                                                    <option value="2_50x25">2 Labels (50 x 25mm)</option>
-                                                    <option value="2_38x25">2 Labels (38 x 25mm)</option>
-                                                </select>
-                                            </div>
+    <x-label for="size" name="{{ __('item.size') }}" />
+    <select class="form-select" id="size" name="size">
+        <option value="1_100x50">1 Label – 100 × 50 mm (Full Width)</option>
+        <option value="2_50x25" selected>2 Labels – 50 × 25 mm (Recommended for TVS LP46)</option>
+        <option value="2_50x30">2 Labels – 50 × 30 mm (Little Bigger)</option>
+    </select>
+</div>
                                             <div class="col-md-9">
                                                 <x-label for="search_item" name="{{ __('item.item_name') }}" />
                                                 <div class="input-group mb-3">
