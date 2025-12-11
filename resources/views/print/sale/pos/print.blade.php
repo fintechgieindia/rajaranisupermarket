@@ -184,7 +184,7 @@
                     <div class="col-4">{{ $formatNumber->formatWithPrecision($savedAmount) }}</div>
                 @endif
 
-                @if(app('company')['show_party_due_payment'])
+                {{-- @if(app('company')['show_party_due_payment'])
                     @php
                         $partyTotalDue = $sale->party->getPartyTotalDueBalance();
                         $partyTotalDueBalance = $partyTotalDue['balance'];
@@ -197,12 +197,12 @@
                     <div class="col-8 text-end"><strong>{{ __('app.total_due_balance') . ($partyTotalDue['status'] == 'you_pay' ? '(You Pay)' : '(Receive)') }}</strong></div>
                     <div class="col-4">{{ $formatNumber->formatWithPrecision($partyTotalDueBalance) }}</div>
                 </tr>
-                @endif
+                @endif --}}
 
 
             </div>
 
-            @if(app('company')['show_tax_summary'] && app('company')['tax_type'] != 'no-tax')
+            {{-- @if(app('company')['show_tax_summary'] && app('company')['tax_type'] != 'no-tax')
         <table class="table table-bordered custom-table tax-breakdown table-compact">
             <thead>
                 @if(app('company')['tax_type'] == 'tax')
@@ -213,7 +213,7 @@
                         <th>{{ __('tax.tax_amount') }}</th>
                     </tr>
                  @else
-                    {{-- GST --}}
+                    {{-- GST 
                      <tr>
                         <th rowspan="2">{{ __('item.hsn') }}</th>
                         <th rowspan="2">{{ __('tax.taxable_amount') }}</th>
@@ -333,11 +333,13 @@
                 @endforeach
             </tbody>
         </table>
-        @endif
+        @endif --}}
+        
 
-            <div class="footer">
-                @include('print.common.terms-conditions')
-            </div>
+            <div class="footer" style="border-top: 1px dashed #000; margin-top: 10px; padding-top: 5px;">
+    @include('print.common.terms-conditions')
+</div>
+
 
             <!-- <div class="qr-code">
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=YourQRCodeDataHere" alt="QR Code">
