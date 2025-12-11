@@ -74,12 +74,71 @@ $(function () {
                 { data: 'sku', name: 'sku', visible: itemSettings.sku == 1 ? true : false, orderable: false, },
                 { data: 'brand_name', name: 'brand_name', orderable: false, },
                 { data: 'category_name', name: 'category_name', orderable: false, },
-                { data: 'sale_price', name: 'sale_price', className: 'text-end' },
-                { data: 'purchase_price', name: 'purchase_price', className: 'text-end' },
-                { data: 'current_stock', name: 'current_stock', className: 'text-left' },
-                { data: 'tracking_type', name: 'tracking_type' },
-                { data: 'username', name: 'username', orderable: false, },
-                { data: 'created_at', name: 'created_at' },
+             {
+                    data: 'sale_price',
+                    name: 'sale_price',
+                    className: 'text-end',
+                    render: function (data, type, full, meta) {
+                        return `
+                            <span class="editable-cell"
+                                  data-id="${full.id}"
+                                  data-field="sale_price"
+                                  contenteditable="true">${data}</span>
+                        `;
+                    }
+                },
+                {
+                    data: 'purchase_price',
+                    name: 'purchase_price',
+                    className: 'text-end',
+                    render: function (data, type, full, meta) {
+                        return `
+                            <span class="editable-cell"
+                                  data-id="${full.id}"
+                                  data-field="purchase_price"
+                                  contenteditable="true">${data}</span>
+                        `;
+                    }
+                },
+
+                {
+    data: 'mrp',
+    name: 'mrp',
+    className: 'text-end',
+    render: function (data, type, full, meta) {
+        return `
+            <span class="editable-cell fw-bold text-primary"
+                  data-id="${full.id}"
+                  data-field="mrp"
+                  contenteditable="true">${data || 0}</span>
+        `;
+    }
+},
+{
+    data: 'base_unit_name',
+    name: 'base_unit_name',
+    className: 'text-center',
+    render: function (data, type, full, meta) {
+        return `<span class="badge bg-light-primary text-primary">${data || '-'}</span>`;
+    }
+},
+               { data: 'current_stock', name: 'current_stock', className: 'text-left',
+      render: function (data, type, full, meta) {
+        // Extract numeric part (e.g., "300" from "300 pcs")
+        const numericValue = data.toString().replace(/[^0-9.]/g, '') || data;  // Strips non-numeric chars, keeps decimals if any
+        
+        return `
+            <span class="editable-cell"
+                  data-id="${full.id}"
+                  data-field="current_stock"
+                  contenteditable="true">${numericValue}</span>
+            ${data.toString().includes(' ') ? `<span class="text-muted ms-1">(${data.toString().split(' ').slice(-1)})</span>` : ''}  <!-- Optional: Show unit next to editable field -->
+        `;
+      }
+},
+                // { data: 'tracking_type', name: 'tracking_type' },
+                // { data: 'username', name: 'username', orderable: false, },
+                // { data: 'created_at', name: 'created_at' },
 
                 { data: 'action', name: 'action', orderable: false, searchable: false },
             ],

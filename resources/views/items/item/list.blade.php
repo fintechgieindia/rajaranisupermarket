@@ -86,10 +86,12 @@
                                             <th>{{ __('item.category.category') }}</th>
 											<th>{{ __('item.sale_price') }}</th>
 											<th>{{ __('item.purchase_price') }}</th>
+											<th>{{ __('item.mrp') }}</th>        <!-- NEW -->
+                                    <th>{{ __('unit.unit') }}</th>           <!-- NEW -->
 											<th>{{ __('item.quantity') }}</th>
-											<th>{{ __('item.tracking_type') }}</th>
+											{{-- <th>{{ __('item.tracking_type') }}</th>
 											<th>{{ __('app.created_by') }}</th>
-											<th>{{ __('app.created_at') }}</th>
+											<th>{{ __('app.created_at') }}</th> --}}
 											<th>{{ __('app.action') }}</th>
 										</tr>
 									</thead>

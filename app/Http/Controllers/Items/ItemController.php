@@ -437,138 +437,115 @@ class ItemController extends Controller
         return view('items.item.list');
     }
 
-    public function datatableList(Request $request)
-    {
-        $warehouseId = request('warehouse_id');
-        $data = Item::with(['user', 'tax', 'itemGeneralQuantities', 'brand', 'category'])
-            ->when($request->item_category_id, function ($query) use ($request) {
-                return $query->where('item_category_id', $request->item_category_id);
-            })
-            ->when($request->brand_id, function ($query) use ($request) {
-                return $query->where('brand_id', $request->brand_id);
-            })
-            ->when($request->tracking_type, function ($query) use ($request) {
-                return $query->where('tracking_type', $request->tracking_type);
-            })
-            ->when(isset($request->is_service), function ($query) use ($request) {
-                if ($request->is_service == 0) {
-                    return $query->where('is_service', 0);
-                } elseif ($request->is_service == 1) {
-                    return $query->where('is_service', 1);
-                }
-            })
-            ->when($request->created_by, function ($query) use ($request) {
-                return $query->where('created_by', $request->created_by);
-            });
+public function updateInline(Request $request)
+{
+    $allowedFields = ['name', 'item_code', 'sku', 'sale_price', 'purchase_price', 'current_stock', 'mrp'];
 
-        // Handle ordering by quantity (current_stock) if requested and warehouse_id is selected
-        $orderColumnIndex = $request->input('order.0.column');
-        $orderColumnName = $request->input("columns.$orderColumnIndex.data");
-        $orderDir = $request->input('order.0.dir', 'asc');
+    $request->validate([
+        'id'    => 'required|integer|exists:items,id',
+        'field' => 'required|string|in:' . implode(',', $allowedFields),
+        'value' => 'required',
+    ]);
 
-        if ($warehouseId && $orderColumnName === 'current_stock') {
-            // Join with item_general_quantities for the selected warehouse
-            $data = $data->leftJoin('item_general_quantities as igq', function ($join) use ($warehouseId) {
-                $join->on('items.id', '=', 'igq.item_id')
-                    ->where('igq.warehouse_id', '=', $warehouseId);
-            })
-                ->addSelect('items.*')
-                ->addSelect(DB::raw('COALESCE(igq.quantity, 0) as warehouse_quantity'))
-                ->orderBy('warehouse_quantity', $orderDir);
-        }
+    // நீ numeric fields-க்கு தனியா validation போடுற — அது சரி
 
-        return DataTables::of($data)
-            ->filter(function ($query) use ($request) {
-                if ($request->has('search')) {
-                    $searchTerm = $request->search['value'];
-                    $query->where(function ($q) use ($searchTerm) {
-                        $q->where('name', 'like', "%{$searchTerm}%")
-                            ->orWhere('description', 'like', "%{$searchTerm}%")
-                            ->orWhere('sku', 'like', "%{$searchTerm}%")
-                            ->orWhere('sale_price', 'like', "%{$searchTerm}%")
-                            ->orWhere('item_code', 'like', "%{$searchTerm}%")
-                            ->orWhere('item_location', 'like', "%{$searchTerm}%")
-                            ->orWhere('tracking_type', 'like', "%{$searchTerm}%")
-                            // Add more columns as needed
-                            ->orWhereHas('tax', function ($taxQuery) use ($searchTerm) {
-                                $taxQuery->where('name', 'like', "%{$searchTerm}%");
-                            })
-                            ->orWhereHas('brand', function ($brandQuery) use ($searchTerm) {
-                                $brandQuery->where('name', 'like', "%{$searchTerm}%");
-                            })
-                            ->orWhereHas('category', function ($categoryQuery) use ($searchTerm) {
-                                $categoryQuery->where('name', 'like', "%{$searchTerm}%");
-                            });
-                    });
-                }
-            })
-            ->addIndexColumn()
-            ->addColumn('created_at', function ($row) {
-                return $row->created_at->format(app('company')['date_format']);
-            })
-            ->addColumn('username', function ($row) {
-                return $row->user->username ?? '';
-            })
-            ->editColumn('tracking_type', function ($row) {
-                return ucfirst($row->tracking_type);
-            })
-            ->editColumn('sale_price', function ($row) {
-                return $this->formatWithPrecision($row->sale_price);
-            })
-            ->addColumn('brand_name', function ($row) {
-                return $row->brand->name ?? '';
-            })
-            ->addColumn('item_location', function ($row) {
-                return $row->item_location ?? '';
-            })
-            ->addColumn('category_name', function ($row) {
-                return $row->category->name;
-            })
-            ->editColumn('purchase_price', function ($row) {
-                return $this->formatWithPrecision($row->purchase_price);
-            })
-            ->editColumn('current_stock', function ($row) use ($warehouseId) {
-                if ($warehouseId) {
-                    // If joined, use warehouse_quantity
-                    $quantity = isset($row->warehouse_quantity) ? $row->warehouse_quantity : (
-                        $row->itemGeneralQuantities
-                            ->where('warehouse_id', $warehouseId)
-                            ->first()?->quantity ?? 0
-                    );
-                } else {
-                    $quantity = $row->current_stock;
-                }
+    $field = $request->field;
 
-                return $this->itemService->getQuantityInUnit($quantity, itemId: $row->id);
-            })
-            ->addColumn('action', function ($row) {
-                $id = $row->id;
-
-                $editUrl = route('item.edit', ['id' => $id]);
-                $deleteUrl = route('item.delete', ['id' => $id]);
-                $transactionUrl = route('item.transaction.list', ['id' => $id]);
-
-                $actionBtn = '<div class="dropdown ms-auto">
-                                <a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded font-22 text-option"></i>
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" href="'.$editUrl.'"><i class="bi bi-trash"></i><i class="bx bx-edit"></i> '.__('app.edit').'</a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="'.$transactionUrl.'"><i class="bi bi-trash"></i><i class="bx bx-transfer-alt"></i> '.__('app.transactions').'</a>
-                                    </li>
-                                    <li>
-                                        <button type="button" class="dropdown-item text-danger deleteRequest" data-delete-id='.$id.'><i class="bx bx-trash"></i> '.__('app.delete').'</button>
-                                    </li>
-                                </ul>
-                            </div>';
-
-                return $actionBtn;
-            })
-            ->rawColumns(['action'])
-            ->make(true);
+    // Numeric fields
+    if (in_array($field, ['sale_price', 'purchase_price', 'mrp', 'current_stock'])) {
+        $request->validate([
+            'value' => 'numeric|min:0'
+        ]);
+        $value = $request->value == '' ? 0 : (float)$request->value;
     }
+    // Text fields
+    elseif (in_array($field, ['name', 'item_code', 'sku'])) {
+        $request->validate([
+            'value' => 'required|string|max:255'
+        ]);
+        if (in_array($field, ['item_code', 'sku'])) {
+            $request->validate([
+                'value' => 'max:50|unique:items,' . $field . ',' . $request->id
+            ]);
+        }
+        $value = $request->value;
+    } else {
+        $value = $request->value;
+    }
+
+    $item = Item::findOrFail($request->id);
+    $item->{$field} = $value;
+    $item->save();
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'Updated successfully'
+    ]);
+}
+
+public function datatableList(Request $request)
+{
+    $warehouseId = $request->warehouse_id;
+
+    $query = Item::query()
+        ->with(['user', 'tax', 'itemGeneralQuantities', 'brand', 'category'])
+        ->leftJoin('units', 'items.base_unit_id', '=', 'units.id')
+        ->select('items.*', 'units.name as base_unit_name');
+
+    // Filters
+    $query->when($request->filled('item_category_id'), fn($q) => $q->where('item_category_id', $request->item_category_id))
+          ->when($request->filled('brand_id'), fn($q) => $q->where('brand_id', $request->brand_id))
+          ->when($request->filled('tracking_type'), fn($q) => $q->where('tracking_type', $request->tracking_type))
+          ->when($request->is_service !== null, fn($q) => $q->where('is_service', $request->is_service))
+          ->when($request->filled('created_by'), fn($q) => $q->where('created_by', $request->created_by));
+
+    // Warehouse-wise stock sorting
+    if ($warehouseId) {
+        $query->leftJoin('item_general_quantities as igq', function ($join) use ($warehouseId) {
+            $join->on('items.id', '=', 'igq.item_id')
+                 ->where('igq.warehouse_id', '=', $warehouseId);
+        })->addSelect(DB::raw('COALESCE(igq.quantity, 0) as warehouse_quantity'));
+    }
+
+    return DataTables::of($query)
+        ->addColumn('base_unit_name', fn($row) => $row->base_unit_name ?? '-')
+        ->editColumn('mrp', fn($row) => $row->mrp ?? 0)
+        ->editColumn('current_stock', function ($row) use ($warehouseId) {
+            if ($warehouseId) {
+                $qty = $row->warehouse_quantity ?? 
+                       ($row->itemGeneralQuantities->where('warehouse_id', $warehouseId)->first()?->quantity ?? 0);
+            } else {
+                $qty = $row->current_stock ?? 0;
+            }
+            return $this->itemService->getQuantityInUnit($qty, itemId: $row->id);
+        })
+        ->editColumn('sale_price', fn($row) => $this->formatWithPrecision($row->sale_price))
+        ->editColumn('purchase_price', fn($row) => $this->formatWithPrecision($row->purchase_price))
+        ->addColumn('brand_name', fn($row) => $row->brand?->name ?? '')
+        ->addColumn('category_name', fn($row) => $row->category?->name ?? '')
+        ->addColumn('action', function ($row) {
+            $editUrl = route('item.edit', $row->id);
+            $transUrl = route('item.transaction.list', ['id' => $row->id]);
+
+            return '<div class="dropdown ms-auto">
+                        <a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown">
+                            <i class="bx bx-dots-vertical-rounded font-22 text-option"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="'.$editUrl.'"><i class="bx bx-edit"></i> '.__('app.edit').'</a></li>
+                            <li><a class="dropdown-item" href="'.$transUrl.'"><i class="bx bx-transfer-alt"></i> '.__('app.transactions').'</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <button type="button" class="dropdown-item text-danger deleteRequest" data-delete-id="'.$row->id.'">
+                                    <i class="bx bx-trash"></i> '.__('app.delete').'
+                                </button>
+                            </li>
+                        </ul>
+                    </div>';
+        })
+        ->rawColumns(['action', 'name', 'sale_price', 'purchase_price', 'current_stock', 'mrp'])
+        ->make(true);
+}
 
     public function delete(Request $request): JsonResponse
     {
@@ -1115,24 +1092,6 @@ class ItemController extends Controller
         return json_encode($response);
     }
 
-    public function updateInline(Request $request)
-{
-    $request->validate([
-        'id'    => 'required|integer',
-        'field' => 'required|string',
-        'value' => 'nullable',
-    ]);
 
-    $item = Item::findOrFail($request->id);
-
-    // Update only the field from datatable
-    $item->{$request->field} = $request->value;
-    $item->save();
-
-    return response()->json([
-        'status'  => true,
-        'message' => 'Updated successfully'
-    ]);
-}
 
 }
