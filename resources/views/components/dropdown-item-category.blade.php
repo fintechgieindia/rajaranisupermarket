@@ -1,4 +1,4 @@
-<select class="form-select {{ ($showSelectOptionAll)? 'single-select-clear-field' : '' }}" id="item_category_id" name="item_category_id" data-placeholder="Choose one thing" {{ ($isMultiple) ? 'multiple' : '' }}>
+<select class="form-select {{ ($showSelectOptionAll)? 'single-select-clear-field' : '' }}" id="item_category_id" name="item_category_id" data-placeholder="Category" {{ ($isMultiple) ? 'multiple' : '' }}>
     @if($showSelectOptionAll)
     <option></option>
     @endif

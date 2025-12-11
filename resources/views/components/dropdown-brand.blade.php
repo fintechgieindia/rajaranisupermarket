@@ -1,4 +1,4 @@
-<select class="form-select {{ ($showSelectOptionAll)? 'single-select-clear-field' : '' }}" id="{{ $name }}" name="{{ $name }}" data-placeholder="Choose one thing" >
+<select class="form-select {{ ($showSelectOptionAll)? 'single-select-clear-field' : '' }}" id="{{ $name }}" name="{{ $name }}" data-placeholder="Brand" >
     @if($showSelectOptionAll)
     <option></option>
     @endif
