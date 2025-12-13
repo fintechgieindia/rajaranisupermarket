@@ -18,6 +18,10 @@ $(function () {
             processing: true,
             serverSide: true,
             method: 'get',
+
+            
+    pageLength: 100,                 // 👈 DEFAULT 100 ROWS
+    lengthMenu: [10, 25, 50, 100, 200, 500], // 👈 Dropdown options
             ajax: {
                 url: baseURL + '/item/datatable-list',
                 data: {
