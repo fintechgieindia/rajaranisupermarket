@@ -53,7 +53,57 @@
             <div class="page-wrapper-1">
                 <div class="container-fluid mt-5">
                     <div class="row">
- <div class="col-sm-12 col-md-7 mb-3">
+                        <div class="col-sm-12 col-md-5 mb-3">
+                            <div class="mb-3">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="input-group">
+                                            <x-input type="text" additionalClasses="datepicker" name="sale_date" :required="true" value=""/>
+                                            <span class="input-group-text" id="input-near-focus" role="button"><i class="fadeIn animated bx bx-calendar-alt"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <x-dropdown-warehouse selected="" dropdownName='warehouse_id' />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <x-dropdown-item-category selected="" :isMultiple="false" :showSelectOptionAll="true" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <x-dropdown-brand selected="" :showSelectOptionAll='true' name="item_brand_id"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="itemsGridContainer">
+
+                        <!-- 🔥 Header shown only ONCE -->
+                        <div class="row g-0 px-2">
+                            <div class="col-12">
+                                <table class="table table-bordered mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th class="text-center">Qty</th>
+                                            <th class="text-end">Price</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 🔥 Only item rows will be appended here -->
+                        <div class="row g-0 px-2" id="itemsGrid"></div>
+
+                        <div class="text-center my-4">
+                            <button id="loadMoreBtn" class="btn btn-sm btn-outline-primary px-5 rounded-1"
+                                type="button">Load More</button>
+                        </div>
+                    </div>
+
+                        </div>
+
+                        <div class="col-sm-12 col-md-7 mb-3">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="input-group mb-3">
@@ -93,19 +143,19 @@
                                                         <tr class="text-uppercase">
                                                             <th scope="col">{{ __('app.action') }}</th>
                                                             <th scope="col">{{ __('item.item') }}</th>
-                                                            {{-- <th scope="col" class="{{ !app('company')['enable_serial_tracking'] ? 'd-none':'' }}">{{ __('item.serial') }}</th>
+                                                            <th scope="col" class="{{ !app('company')['enable_serial_tracking'] ? 'd-none':'' }}">{{ __('item.serial') }}</th>
                                                             <th scope="col" class="{{ !app('company')['enable_batch_tracking'] ? 'd-none':'' }}">{{ __('item.batch_no') }}</th>
                                                             <th scope="col" class="{{ !app('company')['enable_mfg_date'] ? 'd-none':'' }}">{{ __('item.mfg_date') }}</th>
                                                             <th scope="col" class="{{ !app('company')['enable_exp_date'] ? 'd-none':'' }}">{{ __('item.exp_date') }}</th>
-                                                            <th scope="col" class="{{ !app('company')['enable_model'] ? 'd-none':'' }}">{{ __('item.model_no') }}</th> --}}
+                                                            <th scope="col" class="{{ !app('company')['enable_model'] ? 'd-none':'' }}">{{ __('item.model_no') }}</th>
                                                             <th scope="col" class="{{ !app('company')['show_mrp'] ? 'd-none':'' }}">{{ __('item.mrp') }}</th>
-                                                            {{-- <th scope="col" class="{{ !app('company')['enable_color'] ? 'd-none':'' }}">{{ __('item.color') }}</th>
-                                                            <th scope="col" class="{{ !app('company')['enable_size'] ? 'd-none':'' }}">{{ __('item.size') }}</th> --}}
+                                                            <th scope="col" class="{{ !app('company')['enable_color'] ? 'd-none':'' }}">{{ __('item.color') }}</th>
+                                                            <th scope="col" class="{{ !app('company')['enable_size'] ? 'd-none':'' }}">{{ __('item.size') }}</th>
                                                             <th scope="col" class="col-md-1">{{ __('app.qty') }}</th>
                                                             <th scope="col">{{ __('unit.unit') }}</th>
                                                             <th scope="col">{{ __('app.price_per_unit') }}</th>
                                                             <th scope="col" class="{{ !app('company')['show_discount'] ? 'd-none':'' }}">{{ __('app.discount') }}</th>
-                                                            {{-- <th scope="col" class="{{ (app('company')['tax_type'] == 'no-tax') ? 'd-none':'' }}">{{ __('tax.tax') }}</th> --}}
+                                                            <th scope="col" class="{{ (app('company')['tax_type'] == 'no-tax') ? 'd-none':'' }}">{{ __('tax.tax') }}</th>
                                                             <th scope="col">{{ __('app.total') }}</th>
                                                         </tr>
                                                     </thead>
@@ -126,222 +176,191 @@
                                         <x-textarea name='note' value=''/>
                                     </div>
                                     <div class="row mt-3">
-                                        <div class="col-md-2 col-sm-6"><strong>Total Quantity:</strong> <span id="totalQuantity" class="sum_of_quantity">0</span></div>
-                                        <div class="col-md-2 col-sm-6"><strong>Discount:</strong> <span id="totalDiscount" class="sum_of_discount">0.00</span></div>
-                                        <div class="col-md-2 col-sm-6"><strong>MRP Discount:</strong> <span id="totalMRPDiscount" class="discount_of_mrp">0.00</span></div>
-                                        <div class="col-md-2 col-sm-6"><strong>Total Save:</strong> <span id="totalSave" class="vale_of_discount">0.00</span></div>                                        
-                                        <div class="col-md-2 col-sm-6"><strong>Tax:</strong> <span id="totalTax" class="sum_of_tax">0.00</span></div>
-                                        <div class="col-md-2 col-sm-6"><strong>Total Price:</strong> <span id="totalPrice" class="sum_of_total">0.00</span></div>
-                                    </div>
+                                <div class="col-md-2 col-sm-6"><strong>Total Quantity:</strong> <span id="totalQuantity"
+                                        class="sum_of_quantity">0</span></div>
+                                <div class="col-md-2 col-sm-6"><strong>Discount:</strong> <span id="totalDiscount"
+                                        class="sum_of_discount">0.00</span></div>
+                                <div class="col-md-2 col-sm-6"><strong>MRP Discount:</strong> <span
+                                        id="totalMRPDiscount" class="discount_of_mrp">0.00</span></div>
+                                <div class="col-md-2 col-sm-6"><strong>Total Save:</strong> <span id="totalSave"
+                                        class="vale_of_discount">0.00</span></div>
+                                <div class="col-md-2 col-sm-6"><strong>Tax:</strong> <span id="totalTax"
+                                        class="sum_of_tax">0.00</span></div>
+                                <div class="col-md-2 col-sm-6"><strong>Total Price:</strong> <span id="totalPrice"
+                                        class="sum_of_total">0.00</span></div>
+                            </div>
+
 
                                 </div>
 
-                                   <div class="col-md-6 mt-4">
-    <div class="card shadow-sm border-0 rounded-3 p-3">
-        <table class="table mb-0 align-middle">
-            <tbody>
+                             <div class="col-md-6 mt-4">
+                            <div class="card shadow-sm border-0 rounded-3 p-3">
+                                <table class="table mb-0 align-middle">
+                                    <tbody>
 
-                <!-- Payment Row 0 -->
-                <tr>
-                    <td class="w-50">
-                        <select class="form-select select2 payment-type-ajax" 
-                                name="payment_type_id[0]" 
-                                data-placeholder="Choose one thing"></select>
-                    </td>
-                    <td class="w-50">
-                        <x-input type="text" additionalClasses="text-end cu_numeric" 
-                                name="payment_amount[0]" placeholder="Payment Amount" value="0"/>
-                        <input type="hidden" name="payment_note[0]" value="">
-                    </td>
-                </tr>
+                                        <!-- Payment Row 0 -->
+                                        <tr>
+                                            <td class="w-50">
+                                                <select class="form-select select2 payment-type-ajax"
+                                                    name="payment_type_id[0]"
+                                                    data-placeholder="Choose one thing"></select>
+                                            </td>
+                                            <td class="w-50">
+                                                <x-input type="text" additionalClasses="text-end cu_numeric"
+                                                    name="payment_amount[0]" placeholder="Payment Amount" value="0" />
+                                                <input type="hidden" name="payment_note[0]" value="">
+                                            </td>
+                                        </tr>
 
-                <!-- Hidden Payment Row 1 -->
-                <tr class="d-none">
-                    <td class="w-50">
-                        <select class="form-select select2 payment-type-ajax" 
-                                name="payment_type_id[1]" 
-                                data-placeholder="Choose one thing"></select>
-                    </td>
-                    <td class="w-50">
-                        <x-input type="text" additionalClasses="text-end cu_numeric" 
-                                name="payment_amount[1]" placeholder="Payment Amount" value="0"/>
-                        <input type="hidden" name="payment_note[1]" value="">
-                    </td>
-                </tr>
+                                        <!-- Hidden Payment Row 1 -->
+                                        <tr class="d-none">
+                                            <td class="w-50">
+                                                <select class="form-select select2 payment-type-ajax"
+                                                    name="payment_type_id[1]"
+                                                    data-placeholder="Choose one thing"></select>
+                                            </td>
+                                            <td class="w-50">
+                                                <x-input type="text" additionalClasses="text-end cu_numeric"
+                                                    name="payment_amount[1]" placeholder="Payment Amount" value="0" />
+                                                <input type="hidden" name="payment_note[1]" value="">
+                                            </td>
+                                        </tr>
 
-                <!-- Balance -->
-                <tr>
-                    <td class="text-end fw-bold">Balance</td>
-                    <td class="text-end">
-                        <label class="fw-bold balance">0</label>
-                    </td>
-                </tr>
+                                        <!-- Balance -->
+                                        <tr>
+                                            <td class="text-end fw-bold">Balance</td>
+                                            <td class="text-end">
+                                                <label class="fw-bold balance">0</label>
+                                            </td>
+                                        </tr>
 
-                <!-- Change Return -->
-                <tr class="change_return_parent">
-                    <td class="text-end fw-bold">Change Return</td>
-                    <td class="text-end">
-                        <label class="fw-bold change_return text-danger fs-4">0</label>
-                    </td>
-                </tr>
-<!-- Note Row -->
-<tr>
-    <td class="w-50">
-        <label class="form-label text-end fw-bold">{{ __('app.note') }}</label>
-    </td>
-    <td class="w-50">
-        <textarea name="note" class="form-control" rows="2" placeholder="{{ __('app.your_note') }}"></textarea>
-    </td>
-</tr>
-            </tbody>
-        </table>
+                                        <!-- Change Return -->
+                                        <tr class="change_return_parent">
+                                            <td class="text-end fw-bold">Change Return</td>
+                                            <td class="text-end">
+                                                <label class="fw-bold change_return text-danger fs-4">0</label>
+                                            </td>
+                                        </tr>
+                                        <!-- Note Row -->
+                                        <tr>
+                                            <td class="w-50">
+                                                <label class="form-label text-end fw-bold">{{ __('app.note') }}</label>
+                                            </td>
+                                            <td class="w-50">
+                                                <textarea name="note" class="form-control" rows="2"
+                                                    placeholder="{{ __('app.your_note') }}"></textarea>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
 
-        <div class="pt-3 d-flex align-items-center border-top mt-3">
-            <i class="bx bx-plus text-primary font-20 me-2"></i>
-            <a href="javascript:void(0);" class="add-payment-type text-decoration-none fw-semibold">
-                Add Payment Type
-            </a>
-        </div>
-    </div>
-</div>
-
-
-
-<div class="col-md-6 mt-4">
-    <div class="card shadow-sm border-0 rounded-3 p-3">
-        <table class="table mb-0 align-middle">
-            <tbody>
-
-                <!-- Round Off -->
-                <tr>
-                    <td class="w-50">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="round_off_checkbox">
-                            <label class="form-check-label fw-bold" for="round_off_checkbox">
-                                {{ __('app.round_off') }}
-                            </label>
+                                <div class="pt-3 d-flex align-items-center border-top mt-3">
+                                    <i class="bx bx-plus text-primary font-20 me-2"></i>
+                                    <a href="javascript:void(0);"
+                                        class="add-payment-type text-decoration-none fw-semibold">
+                                        Add Payment Type
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                    </td>
-                    <td class="w-50">
-                        <x-input type="text" additionalClasses="text-end cu_numeric round_off" 
-                                name="round_off" placeholder="Round-Off" value="0"/>
-                    </td>
-                </tr>
-
-            
-                
-                <tr>
-                    <td class="fw-bold" for="overall_discount">Overall Discount</td>
-                    <td> <div class="input-group">
-        <input type="number" name="overall_discount" id="overall_discount" class="form-control" value="0" min="0" step="0.01">
-        <select name="overall_discount_type" class="form-select">
-            <option value="fixed">Fixed</option>
-            <option value="percentage">%</option>
-        </select>
-    </div></td>
-                </tr>
-
-                <!-- Grand Total -->
-                <tr>
-                    <td class="fw-bold">Grand Total</td>
-                    <td>
-                        <x-input type="text" additionalClasses="text-end grand_total" readonly=true 
-                                name="grand_total" value="0"/>
-                    </td>
-                </tr>
-
-                   <tr>
-    <td class="fw-bold">Discount</td>
-    <td>
-        <span id="totalDiscount" class="sum_of_discount text-end d-block">0.00</span>
-    </td>
-</tr>
-
-       <tr>
-    <td class="fw-bold">Tax</td>
-    <td>
-        <span id="totalTax" class="sum_of_tax text-end d-block">0.00</span>
-    </td>
-</tr>
 
 
-                {{-- @if(app('company')['is_enable_secondary_currency'])
-                <tr>
-                    <td>
-                        <div class="input-group mb-3">
-                            <x-dropdown-currency selected="" name='invoice_currency_id'/>
-                            <x-input type="text" name="exchange_rate" value="0" 
-                                    additionalClasses='cu_numeric'/>
+
+                        <div class="col-md-6 mt-4">
+                            <div class="card shadow-sm border-0 rounded-3 p-3">
+                                <table class="table mb-0 align-middle">
+                                    <tbody>
+
+                                        <!-- Round Off -->
+                                        <tr>
+                                            <td class="w-50">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="round_off_checkbox">
+                                                    <label class="form-check-label fw-bold" for="round_off_checkbox">
+                                                        {{ __('app.round_off') }}
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td class="w-50">
+                                                <x-input type="text" additionalClasses="text-end cu_numeric round_off"
+                                                    name="round_off" placeholder="Round-Off" value="0" />
+                                            </td>
+                                        </tr>
+
+
+
+                                        <tr>
+                                            <td class="fw-bold" for="overall_discount">Overall Discount</td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <input type="number" name="overall_discount" id="overall_discount"
+                                                        class="form-control" value="0" min="0" step="0.01">
+                                                    <select name="overall_discount_type" class="form-select">
+                                                        <option value="fixed">Fixed</option>
+                                                        <option value="percentage">%</option>
+                                                    </select>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Grand Total -->
+                                        <tr>
+                                            <td class="fw-bold">Grand Total</td>
+                                            <td>
+                                                <x-input type="text" additionalClasses="text-end grand_total"
+                                                    readonly=true name="grand_total" value="0" />
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="fw-bold">Discount</td>
+                                            <td>
+                                                <span id="totalDiscount"
+                                                    class="sum_of_discount text-end d-block">0.00</span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="fw-bold">Tax</td>
+                                            <td>
+                                                <span id="totalTax" class="sum_of_tax text-end d-block">0.00</span>
+                                            </td>
+                                        </tr>
+
+
+                                        {{-- @if(app('company')['is_enable_secondary_currency'])
+                                        <tr>
+                                            <td>
+                                                <div class="input-group mb-3">
+                                                    <x-dropdown-currency selected="" name='invoice_currency_id' />
+                                                    <x-input type="text" name="exchange_rate" value="0"
+                                                        additionalClasses='cu_numeric' />
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <x-input type="text" readonly=true
+                                                    additionalClasses="text-end converted_amount" value="0" />
+                                                <span class="fw-bold exchange-lang"
+                                                    data-exchange-lang="{{ __('currency.converted_to') }}">
+                                                    {{ __('currency.exchange') }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        @endif --}}
+
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </td>
-                    <td class="text-end">
-                        <x-input type="text" readonly=true 
-                                additionalClasses="text-end converted_amount" value="0"/>
-                        <span class="fw-bold exchange-lang" 
-                              data-exchange-lang="{{ __('currency.converted_to') }}">
-                              {{ __('currency.exchange') }}
-                        </span>
-                    </td>
-                </tr>
-                @endif --}}
 
-            </tbody>
-        </table>
-    </div>
-</div>
+                    </div>
+
 
                             </div>
 
 
                         </div>
-                      <div class="col-sm-12 col-md-5 mb-3">
-                            <div class="mb-3">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <div class="input-group">
-                                            <x-input type="text" additionalClasses="datepicker" name="sale_date" :required="true" value=""/>
-                                            <span class="input-group-text" id="input-near-focus" role="button"><i class="fadeIn animated bx bx-calendar-alt"></i></span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <x-dropdown-warehouse selected="" dropdownName='warehouse_id' />
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <x-dropdown-item-category selected="" :isMultiple="false" :showSelectOptionAll="true" />
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <x-dropdown-brand selected="" :showSelectOptionAll='true' name="item_brand_id"/>
-                                    </div>
-                                </div>
-                            </div>
-                           <div id="itemsGridContainer">
-
-    <!-- 🔥 Header shown only ONCE -->
-    <div class="row g-0 px-2">
-        <div class="col-12">
-            <table class="table table-bordered mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Name</th>
-                        <th>Qty</th>
-                        <th>Price</th>
-                    </tr>
-                </thead>
-            </table>
-        </div>
-    </div>
-
-    <!-- 🔥 Only item rows will be appended here -->
-    <div class="row g-0 px-2" id="itemsGrid" ></div>
-
-    <div class="text-center my-4">
-        <button id="loadMoreBtn" class="btn btn-sm btn-outline-primary px-5 rounded-1" type="button">Load More</button>
-    </div>
-</div>
-
-                       
                     </div>
                 </div>
             </div>
@@ -412,3 +431,6 @@
     });
 </script>
 @endsection
+
+
+

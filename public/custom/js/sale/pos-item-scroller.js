@@ -83,46 +83,44 @@ function hideLoadingMessage() {
 }
 
 function appendItemToGrid(item) {
-    // Default image if no image
-    var image_path = item.image_path 
-        ? baseURL + '/item/getimage/thumbnail/' + item.image_path 
-        : baseURL + '/assets/images/no-image.jpg';
-
     const itemHtml = `
-        <div class="col-6 col-sm-12 col-md-6 col-lg-6 mb-3">
+        <div class="col-12">
             <div class="item-card-wrapper position-relative">
-                <div class="card item-card-old border-0 shadow-sm rounded-3 overflow-hidden h-100" 
-                     data-item='${JSON.stringify(item)}' 
-                     style="cursor: pointer;">
-                    
-                    <!-- Image + Qty Badge + Hover + Icon -->
-                    <div class="position-relative">
-                        <img src="${image_path}" 
-                             class="w-100" 
-                             style="height: 180px; object-fit: cover;" 
-                             alt="${item.name}">
-                             
-                        <!-- Qty Badge -->
-                        <span class="position-absolute top-0 start-0 m-2 badge bg-dark px-3 py-2 rounded-pill">
-                            Qty: ${_parseQuantity(item.current_stock)}
-                        </span>
-                    </div>
+                <div class="card item-card-old border-0 shadow-sm rounded-3 overflow-hidden h-100"
+                     data-item='${JSON.stringify(item)}'
+                     style="cursor: pointer; margin-bottom:0rem !important;">
 
-                    <!-- Card Body -->
-                    <div class="card-body p-3 bg-light">
-                        <h6 class="card-title mb-2 text-dark fw-bold" style="font-size: 0.95rem; line-height: 1.3;">
-                            ${item.name}
-                        </h6>
-                        <p class="card-text  fw-bold mb-0" style="font-size: 1.1rem;">
-                            ₹${_parseFix(item.sale_price)}
-                        </p>
-                    </div>
+                    <!-- TABLE STYLE ROW -->
+                    <table class="table mb-0">
+                        <tbody>
+                            <tr>
+                                <!-- NAME -->
+                                <td class="position-relative fw-bold" style="width:39%">
+                                    ${item.name}
 
-                    <!-- Hover Overlay with + Icon -->
-                    <div class="add-overlay position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center rounded-3" 
-                         style="background: rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.3s;">
-                        <i class="bx bx-plus-circle bx-lg text-white"></i>
-                    </div>
+                                    <!-- Hover Overlay -->
+                                   
+                                </td>
+
+                                 <div class="add-overlay position-absolute top-0 start-0 w-100 h-100 
+                                        d-flex justify-content-center align-items-center"
+                                         style="background: rgba(0,0,0,0.05); opacity:0; transition:0.3s;">
+                                        <i class="bx bx-plus-circle bx-sm text-dark"></i>
+                                    </div>
+
+                                <!-- QTY -->
+                                <td class="text-center fw-bold">
+                                    ${_parseQuantity(item.current_stock)}
+                                </td>
+
+                                <!-- PRICE -->
+                                <td class="text-end fw-bold ">
+                                    ₹${_parseFix(item.sale_price)}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
                 </div>
             </div>
         </div>
