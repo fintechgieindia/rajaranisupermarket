@@ -11,11 +11,11 @@ $(function() {
                 label: 'Google',
                 data: [6, 20, 14, 12, 17, 8, 10],
                 backgroundColor: [
-                    '#008cff'
+                    '#8b3951'
                 ],
                 lineTension: 0.4,
                 borderColor: [
-                    '#008cff'
+                    '#8b3951'
                 ],
                 borderWidth: 3
             },
@@ -319,11 +319,11 @@ var myChart = new Chart(ctx, {
                 label: 'Google',
                 data: [6, 20, 14, 12, 17, 8, 10],
                 backgroundColor: [
-                    '#008cff'
+                    '#8b3951'
                 ],
                 lineTension: 0.4,
                 borderColor: [
-                    '#008cff'
+                    '#8b3951'
                 ],
                 borderWidth: 1
             },

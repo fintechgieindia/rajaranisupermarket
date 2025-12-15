@@ -41,12 +41,12 @@ Morris.Area({
         labels: ['iPhone', 'iPad'],
         pointSize: 3,
         fillOpacity: 0,
-        pointStrokeColors:['#008cff', '#15ca20'],
+        pointStrokeColors:['#8b3951', '#15ca20'],
         behaveLikeLine: true,
         gridLineColor: '#e0e0e0',
         lineWidth: 3,
         hideHover: 'auto',
-        lineColors: ['#008cff', '#15ca20'],
+        lineColors: ['#8b3951', '#15ca20'],
         resize: true
         
     });
@@ -67,7 +67,7 @@ Morris.Area({
             value: 20
         }],
         resize: true,
-        colors:['#008cff', '#15ca20', '#fd3550']
+        colors:['#8b3951', '#15ca20', '#fd3550']
     });
 
 // Morris bar chart
@@ -112,7 +112,7 @@ Morris.Area({
         xkey: 'y',
         ykeys: ['a', 'b', 'c'],
         labels: ['A', 'B', 'C'],
-        barColors:['#008cff', '#15ca20', '#75808a'],
+        barColors:['#8b3951', '#15ca20', '#75808a'],
         hideHover: 'auto',
         gridLineColor: '#eef0f2',
         resize: true
@@ -153,7 +153,7 @@ Morris.Area({
 
 
                 ],
-                lineColors: ['#008cff', '#15ca20'],
+                lineColors: ['#8b3951', '#15ca20'],
                 xkey: 'period',
                 ykeys: ['iphone', 'ipad'],
                 labels: ['Site A', 'Site B'],

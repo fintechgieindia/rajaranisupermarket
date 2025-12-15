@@ -128,7 +128,7 @@ jQuery('#geographic-map-2').vectorMap(
     color: '#009efb',
     regionStyle : {
         initial : {
-          fill : '#008cff'
+          fill : '#8b3951'
         }
       },
     markerStyle: {
