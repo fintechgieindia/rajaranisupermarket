@@ -153,3 +153,95 @@ body {
     font-size: 13px;
     line-height: 1;
   }
+
+  /* ===============================
+   POS THERMAL PRINT OVERRIDE
+   =============================== */
+@media print {
+
+    @page {
+        size: 80mm auto;   /* 58mm printer na 58mm */
+        margin: 3mm;
+    }
+
+    body {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 12px;
+    }
+
+    /* REMOVE 1000px WIDTH ISSUE */
+    body,
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* MAIN BILL WRAPPER */
+    .invoice-wrapper,
+    .page-wrapper,
+    .page-wrapper-1 {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 3mm !important;
+        box-sizing: border-box;
+        height: auto !important;
+    }
+
+    /* REMOVE TOP GAP */
+    .page-wrapper-1 {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* TABLE CLEAN POS LOOK */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        font-size: 11px;
+        padding: 3px 0;
+        border: none;
+    }
+
+    /* HEADER */
+    .invoice-header,
+    .invoice-header p,
+    .invoice-header div {
+        text-align: center;
+        font-size: 11px;
+        line-height: 1.3;
+    }
+
+    .invoice-title {
+        font-size: 15px;
+        font-weight: bold;
+    }
+
+    /* TOTAL SECTION */
+    .row.text-end strong {
+        font-size: 11.5px;
+    }
+
+    /* FOOTER */
+    .footer {
+        font-size: 10px;
+        text-align: center;
+        margin-top: 5px;
+        padding-top: 5px;
+    }
+
+    /* HIDE UI ELEMENTS */
+    .hide-print-btn,
+    .print-btn,
+    .signature,
+    .company-logo {
+        display: none !important;
+    }
+}
