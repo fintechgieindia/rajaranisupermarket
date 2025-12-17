@@ -439,7 +439,7 @@ class ItemController extends Controller
 
 public function updateInline(Request $request)
 {
-    $allowedFields = ['name', 'item_code', 'sku', 'sale_price', 'purchase_price', 'current_stock', 'mrp'];
+    $allowedFields = ['name', 'item_code', 'sku', 'sale_price', 'purchase_price', 'mrp'];
 
     $request->validate([
         'id'    => 'required|integer|exists:items,id',
@@ -949,8 +949,8 @@ public function datatableList(Request $request)
                 'tax_id' => $item->tax_id,
                 'tracking_type' => $item->tracking_type,
                 'item_location' => $item->item_location,
-                // 'current_stock'             => $item->current_stock,
-                'current_stock' => $warehouseStock,
+                'current_stock'             => $item->current_stock,
+                // 'current_stock' => $warehouseStock,
                 'stock_in_unit' => ($isRquiredToShowStockInUnit) ? $this->itemService->getQuantityInUnit($warehouseStock, $item->id) : 0,
                 'image_path' => $item->image_path ?? 'no',
                 'mrp' => $item->mrp,

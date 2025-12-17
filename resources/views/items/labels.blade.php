@@ -3,58 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TVS LP46 Neo - 50x30 (2 UPS) Label Print</title>
+    <title>TVS LP46 Neo - 50x30mm (2 UPS) Label Print</title>
     <script src="https://cdn.jsdelivr.net/npm/bwip-js@4.3.0/dist/bwip-js.min.js"></script>
 
 <style>
 /* ================= PRINT SETTINGS ================= */
 @media print {
     @page {
-        /* 2 labels × 30mm = 60mm width, height = 50mm */
-        size: 60mm 50mm portrait;
+        size: 100mm 30mm landscape;
         margin: 0;
     }
 
     body {
         margin: 0;
         padding: 0;
-        width: 60mm;
+        width: 100mm;
+        height: 30mm;
+    }
+
+    .label-container {
+        page-break-after: always;
     }
 }
 
-/* ================= ROW CONTAINER ================= */
-.label-container {
-    display: flex;
-    justify-content: space-between; /* exact 2 columns */
-    align-items: center;
-    width: 60mm;   /* full roll width */
-    height: 50mm;  /* label height */
+/* ================= BODY ================= */
+body {
     margin: 0;
     padding: 0;
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+}
+
+/* ================= ROW CONTAINER (2 labels side by side) ================= */
+.label-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3mm;
+    width: 100mm;
+    height: 30mm;
+    margin: 0 auto 3mm auto;
+    padding: 0;
     box-sizing: border-box;
-    page-break-after: always;
+    background: white;
 }
 
 /* ================= SINGLE LABEL ================= */
 .label {
-    width: 30mm;   /* individual label width */
-    height: 50mm;  /* individual label height */
+    width: 48.5mm;
+    height: 28mm;
     padding: 1mm;
     box-sizing: border-box;
     text-align: center;
-    overflow: hidden; /* prevent overlap */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    border: 0.5px solid #ccc;
+    background: white;
 }
 
 /* ================= TEXT SIZES ================= */
-.company-name { font: bold 10pt Arial; margin: 0 0 1mm; }
-.item-name   { font: normal 8pt Arial; margin: 0 0 1mm; }
-.price       { font: bold 9pt Arial; margin: 1mm 0; }
-.barcode-number { font: bold 7pt Arial; margin-top: 1mm; }
-/* Added styles for PKD and EXP dates */
-.dates-container { font: normal 6pt Arial; margin-top: 1mm; display: flex; justify-content: space-between; }
-.date-field { font: bold 6pt Arial; }
+.company-name { 
+    font: bold 8pt Arial; 
+    margin: 0;
+    line-height: 1.1;
+    max-height: 6mm;
+    overflow: hidden;
+}
 
-canvas { max-width: 100%; }
+.item-name { 
+    font: normal 6.5pt Arial; 
+    margin: 0.3mm 0;
+    line-height: 1.1;
+    max-height: 5mm;
+    overflow: hidden;
+}
+
+.price { 
+    font: bold 9pt Arial; 
+    margin: 0.3mm 0;
+    color: #000;
+}
+
+.barcode-container {
+    margin: 0.5mm 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+canvas { 
+    max-width: 42mm;
+    height: auto;
+}
+
+.barcode-number { 
+    font: bold 6pt Arial; 
+    margin: 0.3mm 0;
+    letter-spacing: 0.3mm;
+}
+
+.dates-container { 
+    font: normal 5pt Arial; 
+    margin: 0;
+    display: flex; 
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 1mm;
+}
+
+.date-field { 
+    font: bold 5pt Arial; 
+}
 </style>
 </head>
 <body>
@@ -64,7 +126,21 @@ canvas { max-width: 100%; }
 <script>
 let labelData = [];
 let barcodeType = 'code128';
-const COLS = 2; // 🔒 fixed for 2 UPS
+const COLS = 2;
+
+function formatMonthYear(date) {
+    if (!date) return 'N/A';
+
+    // Works for "YYYY-MM-DD" and "YYYY-MM"
+    const d = new Date(date);
+    if (isNaN(d)) return date;
+
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+
+    return `${month}/${year}`; // MM/YYYY
+}
+
 
 function renderLabels() {
     const container = document.getElementById('labels-container');
@@ -89,25 +165,32 @@ function renderLabels() {
                 <div class="company-name">${item.companyName}</div>
                 <div class="item-name">${item.itemName}</div>
                 <div class="price">₹${item.price}</div>
-                <canvas id="bc-${itemIndex}-${i}"></canvas>
+                <div class="barcode-container">
+                    <canvas id="bc-${itemIndex}-${i}"></canvas>
+                </div>
                 <div class="barcode-number">${item.barcode}</div>
                 <div class="dates-container">
-                    <span class="date-field">PKD: ${item.pkdDate || 'N/A'}</span>
-                    <span class="date-field">EXP: ${item.expDate || 'N/A'}</span>
+                    <span class="date-field">PKD: ${formatMonthYear(item.pkdDate)}</span>
+<span class="date-field">EXP: ${formatMonthYear(item.expDate)}</span>
                 </div>
             `;
 
             currentRow.appendChild(label);
 
-            // Barcode generation tuned for 50mm height
-            bwipjs.toCanvas(`bc-${itemIndex}-${i}`, {
-                bcid: barcodeType,
-                text: item.barcode,
-                scale: 2,
-                height: 8,           // mm – fits perfectly
-                includetext: false,
-                textxalign: 'center'
-            });
+            setTimeout(() => {
+                try {
+                    bwipjs.toCanvas(`bc-${itemIndex}-${i}`, {
+                        bcid: barcodeType,
+                        text: item.barcode,
+                        scale: 2,
+                        height: 6,
+                        includetext: false,
+                        textxalign: 'center'
+                    });
+                } catch (e) {
+                    console.error('Barcode generation error:', e);
+                }
+            }, 10);
 
             countInRow++;
         }
@@ -124,6 +207,21 @@ window.addEventListener('message', function(e) {
     labelData = JSON.parse(e.data.itemData);
     renderLabels();
 });
+
+// Test data for preview
+labelData = [
+    {
+        companyName: "Rajarani Supermarket",
+        itemName: "Thuvaram Paruppu 1 kg",
+        price: "110.00",
+        barcode: "7731982400",
+        quantity: 2,
+        pkdDate: "12/2024",
+        expDate: "12/2025"
+    }
+];
+barcodeType = 'code128';
+renderLabels();
 </script>
 
 </body>
